@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset='utf-8'>
+    <title>Input</title>
+    <meta name="author" content="Simon Schoeters">
+    <link href="default.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" charset="utf-8" src="Scrippet.js"></script>
+    <script type="text/javascript" charset="utf-8">
+      Scrippet.onInitialize = function (scrippet) {
+        // Setup HTML content according to the number of snippets
+        var snippets = Scrippet.getSnippets();
+        var confirmation = snippets.length > 1
+          ? "You are about to export " + snippets.length + " snippets as public <a href='http://gist.github.com'>GitHub</a> gists."
+          : "You are about to export ‘" + snippets[0].getName() + "’ as a public <a href='http://gist.github.com'>GitHub</a> gist.";
+          document.getElementById("confirmation").innerHTML = confirmation;
+      };
+      Scrippet.onFinalize = function (scrippet) {
+        // Provide separate environment variable for every snippet
+        var snippets = Scrippet.getSnippets();
+        for (var i = 0; i < snippets.length; i++) {
+          snippets[i].setProperty("GIST_SNIPPET_URL", null);
+        }
+      };
+    </script>
+  </head>
+  <body>
+    <div class="center-aligned slightly-padded">
+      <p class="general-information" id="confirmation"></p>
+    </div>
+  </body>
+</html>

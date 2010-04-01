@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset='utf-8'>
+    <title>Output</title>
+    <meta name="author" content="Simon Schoeters">
+    <link href="default.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" charset="utf-8" src="Scrippet.js"></script>
+    <script type="text/javascript" charset="utf-8">
+      function copyURL(URL, name) {
+        Scrippet.setClipboard(URL);
+        document.getElementById("copy-note").innerHTML = "Snippet ‘" + name + "’ was copied into the Clipboard.";
+      };
+      Scrippet.onInitialize = function (scrippet) {
+      // Setup HTML content according to the returned results
+      var snippets = Scrippet.getSnippets();
+      var listContents = "";
+      var clipboardContents = "";
+      for (var i = 0; i < snippets.length; i++) {
+        var snippet = snippets[i];
+        var URL = snippet.getProperty("GIST_SNIPPET_URL");
+        var name = snippet.getName();
+        var link = "<li><img src=\"copy.png\" style=\"cursor:pointer;\" " + "title=\"Copy into Clipboard\" onclick=\"copyURL('" + URL + "', '" + name + "');\"/>&nbsp;&nbsp;<a href='" + URL + "'>" + name + "</a></li>";
+        listContents = listContents + link;
+        if (clipboardContents.length > 0)
+          clipboardContents += "\n";
+          clipboardContents += URL;
+        }
+        document.getElementById("url-list").innerHTML = listContents;
+        public_listing = "Gist are marked as public and will be included in the  public listing at <a href='http://gist.github.com/gists'>http://gist.github.com/gists</a>.";
+        // Setup copy button
+        var copyButton = document.getElementById("copy-all-button");
+        if (snippets.length > 1) {
+          copyButton.innerHTML = "Copy all snippet URLs";
+        }
+        copyButton.onclick = function () {
+          Scrippet.setClipboard(clipboardContents);
+          document.getElementById("copy-note").innerHTML = snippets.length > 1
+            ? "All snippet URLs have been copied to the Clipboard."
+            : "Snippet URL has been copied to the Clipboard";
+        };
+      };
+    </script>
+  </head>
+  <body>
+    <div class="center-aligned slightly-padded">
+      <p class="general-information" id="confirmation">
+         The following snippets have been successfully uploaded:
+      </p>
+      <ol id="url-list" class="left-aligned horizontally-padded">
+      </ol>
+      <p id="flag-note" class="text-note left-aligned horizontally-padded"></p>
+        <button id="copy-all-button">Copy snippet URL</button>
+      <p id="copy-note" class="text-note center-aligned horizontally-padded"></p>
+    </div>
+  </body>
+</html>

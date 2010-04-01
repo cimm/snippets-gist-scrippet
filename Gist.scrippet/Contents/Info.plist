@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleIconFile</key>
+	<string>Gist</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.snippetsapp.scrippets.Gist</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Share via gist.github.com</string>
+	<key>CFBundlePackageType</key>
+	<string>BNDL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>ScrippetRole</key>
+	<string>Exporter</string>
+	<key>ScrippetSteps</key>
+	<array>
+		<dict>
+			<key>Name</key>
+			<string>Confirm</string>
+			<key>Source</key>
+			<string>input.html</string>
+		</dict>
+		<dict>
+			<key>Name</key>
+			<string>Uploading</string>
+			<key>Source</key>
+			<string>gist.rb</string>
+		</dict>
+		<dict>
+			<key>Name</key>
+			<string>Completed</string>
+			<key>Source</key>
+			<string>output.html</string>
+		</dict>
+	</array>
+</dict>
+</plist>
