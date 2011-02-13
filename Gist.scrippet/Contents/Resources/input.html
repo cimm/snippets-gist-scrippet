@@ -7,26 +7,135 @@
     <link href="default.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" charset="utf-8" src="Scrippet.js"></script>
     <script type="text/javascript" charset="utf-8">
+      var
+        inputApiToken = null,
+        inputLogin = null,
+        checkPrivate = null,
+        paraConfirmation = null,
+        recentAPIKey = null,
+        login = null,
+        token = null,
+        prv = false;
+
       Scrippet.onInitialize = function (scrippet) {
-        // Setup HTML content according to the number of snippets
-        var snippets = Scrippet.getSnippets();
-        var confirmation = snippets.length > 1
-          ? "You are about to export " + snippets.length + " snippets as public <a href='http://gist.github.com'>GitHub</a> gists."
-          : "You are about to export ‘" + snippets[0].getName() + "’ as a public <a href='http://gist.github.com'>GitHub</a> gist.";
-          document.getElementById("confirmation").innerHTML = confirmation;
+        // Restore data
+        inputApiToken = document.getElementById("api-token");
+        inputLogin = document.getElementById("login");
+        checkPrivate = document.getElementById("is-private");
+        paraConfirmation = document.getElementById("confirmation");
+
+        inputApiToken.value = Scrippet.loadPersistentItem("GIST_API_TOKEN") || "";
+        inputLogin.value = Scrippet.loadPersistentItem("GIST_LOGIN") || "";
+        checkPrivate.checked = Scrippet.loadPersistentItem("GIST_IS_PRIVATE") == "1";
+
+        validateLogin();
+        update();
       };
+
       Scrippet.onFinalize = function (scrippet) {
+        // Store data
+        Scrippet.storePersistentItem("GIST_API_TOKEN", getApiToken());
+        Scrippet.storePersistentItem("GIST_LOGIN", getLogin());
+        Scrippet.storePersistentItem("GIST_IS_PRIVATE", isPrivate() ? "1" : "");
+
         // Provide separate environment variable for every snippet
         var snippets = Scrippet.getSnippets();
         for (var i = 0; i < snippets.length; i++) {
+          snippets[i].setProperty("SNIPPET_EXTENTION", "." + snippets[i].getExportFilename().split(".").pop() );
           snippets[i].setProperty("GIST_SNIPPET_URL", null);
         }
+
+        Scrippet.setProperty("GIST_API_TOKEN", token);
+        Scrippet.setProperty("GIST_LOGIN", login);
+        Scrippet.setProperty("GIST_IS_PRIVATE", prv ? "1" : "");
       };
+
+      function update() {
+        // Setup HTML content according to the number of snippets
+        prv = document.getElementById("is-private").checked;
+        var authentication = document.getElementById("authentication");
+        var snippets = Scrippet.getSnippets();
+        var multiple = snippets.length > 1;
+        var confirmation = "You are about to export " +
+            ( multiple ? ( snippets.length + " snippets" ) : snippets[0].getExportFilename() ) +
+            " as " +
+            ( multiple ? "" : "a " ) +
+            ( prv ? "private" : "public" ) +
+            " <a href='http://gist.github.com'>GitHub</a> gist" +
+            ( multiple ? "s" : "" ) +
+            ".";
+        paraConfirmation.innerHTML = confirmation;
+        if (login) {
+          authentication.style.display = "block";
+          triangle.className = "down";
+          toggle.style.paddingLeft = "5px";
+        }
+      }
+
+      function isPrivate() { return checkPrivate.checked; }
+      function getApiToken() { return inputApiToken.value; }
+      function getLogin() { return inputLogin.value; }
+
+      function validateLogin() {
+        var
+            valid = false,
+            newPrv = isPrivate(),
+            newToken = getApiToken(),
+            newLogin = getLogin();
+
+        if (newPrv != prv || newToken != token || newLogin != login) {
+            prv = newPrv;
+            token = newToken;
+            login = newLogin;
+            valid =
+                ( !login && !token ) ||
+                ( /^[a-f\d]{32}$/.test(token) && /^[0-9a-z\-]+$/i.test(login) );
+
+            Scrippet.setDefaultButtonEnabled(valid);
+        }
+        setTimeout(validateLogin, 200);
+      }
+
+      function toggleAuthentication() {
+        var authentication = document.getElementById("authentication");
+        var inputLogin = document.getElementById("login");
+        var inputApiToken = document.getElementById("api-token");
+        var toggle = document.getElementById("toggle");
+        var triangle = document.getElementById("triangle");
+        if (authentication.style.display == "block") {
+          authentication.style.display = "none";
+          inputLogin.value = "";
+          inputApiToken.value = "";
+          triangle.className = "right";
+          toggle.style.paddingLeft = "15px";
+        } else {
+          authentication.style.display = "block";
+          triangle.className = "down";
+          toggle.style.paddingLeft = "5px";
+        }
+      }
+
     </script>
   </head>
   <body>
     <div class="center-aligned slightly-padded">
       <p class="general-information" id="confirmation"></p>
+      <p id="toggle" onClick="toggleAuthentication();"><span id="triangle" class="right"></span> Authenticate</p>
+      <ul id="authentication">
+        <li>
+          <label for="login" class="col1">Login</label>
+          <input id="login" onKeyPress="if (event.keyCode == 13) Scrippet.clickDefaultButton()" type="text"/>
+        </li>
+        <li>
+          <label for="api-token" class="col1"><a href="https://github.com/account#admin_bucket">API Token</a></label>
+          <input id="api-token" onKeyPress="if (event.keyCode == 13) Scrippet.clickDefaultButton()" maxlength="32" type="text"/>
+        </li>
+        <li>
+          <span class="col1"></span>
+          <input id="is-private" type="checkbox" onClick="update();" />
+          <label for="is-private">Private gist</label>
+        </li>
+      </ul>
     </div>
   </body>
 </html>

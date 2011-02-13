@@ -1,3 +1,13 @@
+ul { text-align: left; list-style: none; display: table; }
+li { display: table-row; height: 2.5em; }
+input[type=text] { width: 15em; }
+
+#toggle { cursor: pointer; text-align: left; padding-left: 15px; margin-left: 3.5em; padding-bottom: 4px; border-bottom: 1px solid #ddd; margin-right: 10em; }
+#authentication { display: none; }
+
+.right { position: relative; left: -15px; top: 12px; display: block; width: 0; height: 0; border-top: 5px solid transparent; border-left: 10px solid #ddd; border-bottom: 5px solid transparent; }
+.down { position: relative; left: -5px; top: 12px;  width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 10px solid #ddd; }
+.col1 { display: table-cell; padding-right: 0.8em; }
 .center-aligned { text-align: center; }
 .left-aligned { text-align: left; }
 .slightly-padded { padding: 30px 50px; }

@@ -18,7 +18,8 @@
       var clipboardContents = "";
       for (var i = 0; i < snippets.length; i++) {
         var snippet = snippets[i];
-        var URL = snippet.getProperty("GIST_SNIPPET_URL");
+        var URL = ( snippet.getProperty("GIST_SNIPPET_URL") || "" ).replace(/^https/,"http");
+        
         var name = snippet.getName();
         var link = "<li><img src=\"copy.png\" style=\"cursor:pointer;\" " + "title=\"Copy into Clipboard\" onclick=\"copyURL('" + URL + "', '" + name + "');\"/>&nbsp;&nbsp;<a href='" + URL + "'>" + name + "</a></li>";
         listContents = listContents + link;
