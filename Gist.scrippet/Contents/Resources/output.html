@@ -7,40 +7,53 @@
     <link href="default.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" charset="utf-8" src="Scrippet.js"></script>
     <script type="text/javascript" charset="utf-8">
+
+      function gistName( URL ) {
+        return "Gist:" + URL.replace(/.+\/([^\/]+)$/,"$1");
+      }
+
       function copyURL(URL, name) {
         Scrippet.setClipboard(URL);
-        document.getElementById("copy-note").innerHTML = "Snippet ‘" + name + "’ was copied into the Clipboard.";
-      };
+        document.getElementById("copy-note").innerHTML = ( name ? ( "Snippet ‘" + name + "’" ) : gistName(URL) ) + " was copied into the Clipboard.";
+      }
       Scrippet.onInitialize = function (scrippet) {
-      // Setup HTML content according to the returned results
-      var snippets = Scrippet.getSnippets();
-      var listContents = "";
-      var clipboardContents = "";
-      for (var i = 0; i < snippets.length; i++) {
-        var snippet = snippets[i];
-        var URL = ( snippet.getProperty("GIST_SNIPPET_URL") || "" ).replace(/^https/,"http");
-        
-        var name = snippet.getName();
-        var link = "<li><img src=\"copy.png\" style=\"cursor:pointer;\" " + "title=\"Copy into Clipboard\" onclick=\"copyURL('" + URL + "', '" + name + "');\"/>&nbsp;&nbsp;<a href='" + URL + "'>" + name + "</a></li>";
-        listContents = listContents + link;
-        if (clipboardContents.length > 0)
-          clipboardContents += "\n";
-          clipboardContents += URL;
+
+        // Setup HTML content according to the returned results
+        var
+          count = Number(Scrippet.getProperty("GIST_SNIPPET_COUNT"))||0,
+          combined = count > 0,
+          snippets = Scrippet.getSnippets(),
+          listContents = [],
+          clipboardContents = [];
+
+        for (var i = 0; i < snippets.length; i++) {
+          var snippet = snippets[i];
+          var URL = snippet.getProperty("GIST_SNIPPET_URL");
+
+          if( !URL || !URL.match(/^http/) ) continue;
+          clipboardContents.push(URL);
+          listContents.push( getListContent( URL, combined ? null : snippet.getName() ) );
+          if( combined ) break;
         }
-        document.getElementById("url-list").innerHTML = listContents;
+        document.getElementById("url-list").innerHTML = listContents.join("");
         public_listing = "Gist are marked as public and will be included in the  public listing at <a href='http://gist.github.com/gists'>http://gist.github.com/gists</a>.";
         // Setup copy button
         var copyButton = document.getElementById("copy-all-button");
-        if (snippets.length > 1) {
+        if (snippets.length > 1)
           copyButton.innerHTML = "Copy all snippet URLs";
-        }
         copyButton.onclick = function () {
-          Scrippet.setClipboard(clipboardContents);
-          document.getElementById("copy-note").innerHTML = snippets.length > 1
+          Scrippet.setClipboard(clipboardContents.join("\n"));
+          document.getElementById("copy-note").innerHTML = !combined && snippets.length > 1
             ? "All snippet URLs have been copied to the Clipboard."
             : "Snippet URL has been copied to the Clipboard";
         };
       };
+
+      function getListContent( URL, name ) {
+        if(!name) name = gistName(URL);
+        return "<li><img src=\"copy.png\" style=\"cursor:pointer;\" " + "title=\"Copy into Clipboard\" onclick=\"copyURL('" + URL + "', '" + name + "');\"/>&nbsp;&nbsp;<a href='" + ( URL.replace(/^https/,"http") ) + "'>" + name + "</a></li>";
+      }
+
     </script>
   </head>
   <body>

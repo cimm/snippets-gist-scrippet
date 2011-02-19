@@ -11,10 +11,15 @@
         inputApiToken = null,
         inputLogin = null,
         checkPrivate = null,
+        checkCombined = null,
         paraConfirmation = null,
         recentAPIKey = null,
         login = null,
         token = null,
+        toggle = null,
+        toggleCombined = null,
+        triangle = null,
+        body = null,
         prv = false;
 
       Scrippet.onInitialize = function (scrippet) {
@@ -22,11 +27,18 @@
         inputApiToken = document.getElementById("api-token");
         inputLogin = document.getElementById("login");
         checkPrivate = document.getElementById("is-private");
+        checkCombined = document.getElementById("is-combined");
         paraConfirmation = document.getElementById("confirmation");
+        toggle = document.getElementById("toggle");
+        toggleCombined = document.getElementById("toggle-combined");
+        triangle = document.getElementById("triangle");
+        body = document.body;
 
         inputApiToken.value = Scrippet.loadPersistentItem("GIST_API_TOKEN") || "";
         inputLogin.value = Scrippet.loadPersistentItem("GIST_LOGIN") || "";
         checkPrivate.checked = Scrippet.loadPersistentItem("GIST_IS_PRIVATE") == "1";
+        checkCombined.checked = Scrippet.loadPersistentItem("GIST_IS_COMBINED") == "1";
+        setUseAuthentication( Scrippet.loadPersistentItem("GIST_USE_AUTHENTICATION") == "1" );
 
         validateLogin();
         update();
@@ -37,42 +49,59 @@
         Scrippet.storePersistentItem("GIST_API_TOKEN", getApiToken());
         Scrippet.storePersistentItem("GIST_LOGIN", getLogin());
         Scrippet.storePersistentItem("GIST_IS_PRIVATE", isPrivate() ? "1" : "");
+        Scrippet.storePersistentItem("GIST_IS_COMBINED", isCombined() ? "1" : "");
+        Scrippet.storePersistentItem("GIST_USE_AUTHENTICATION", getUseAuthentication() ? "1" : "");
 
         // Provide separate environment variable for every snippet
         var snippets = Scrippet.getSnippets();
         for (var i = 0; i < snippets.length; i++) {
-          snippets[i].setProperty("SNIPPET_EXTENTION", "." + snippets[i].getExportFilename().split(".").pop() );
-          snippets[i].setProperty("GIST_SNIPPET_URL", null);
+          var
+            s = snippets[i],
+            filename = s.getExportFilename(),
+            ext = filename.replace(/.+\/?(\.[^w]+)$/,"$1"),
+            idx = i + 1;
+          if( isCombined() ) {
+            Scrippet.setProperty("GIST_SNIPPET_NAME_" + idx , s.getName() );
+            Scrippet.setProperty("GIST_SNIPPET_SOURCE_CODE_" + idx , s.getSourceCode() );
+            Scrippet.setProperty("GIST_SNIPPET_EXPORT_FILENAME_" + idx , filename);
+            Scrippet.setProperty("GIST_SNIPPET_EXTENTION_" + idx , ext );
+            s.setProperty("GIST_SNIPPET_INDEX", idx );
+          } else {
+            s.setProperty("SNIPPET_EXTENTION", ext );
+          }
+          s.setProperty("GIST_SNIPPET_URL", null);
         }
-
-        Scrippet.setProperty("GIST_API_TOKEN", token);
-        Scrippet.setProperty("GIST_LOGIN", login);
+        if( isCombined() ) {
+            Scrippet.setProperty("GIST_SNIPPET_COUNT", i );
+        }
+        if( getUseAuthentication() ) {
+            Scrippet.setProperty("GIST_API_TOKEN", token);
+            Scrippet.setProperty("GIST_LOGIN", login);
+        }
         Scrippet.setProperty("GIST_IS_PRIVATE", prv ? "1" : "");
       };
 
       function update() {
         // Setup HTML content according to the number of snippets
-        prv = document.getElementById("is-private").checked;
-        var authentication = document.getElementById("authentication");
+        prv = isPrivate();
         var snippets = Scrippet.getSnippets();
         var multiple = snippets.length > 1;
+        var combined = isCombined();
         var confirmation = "You are about to export " +
             ( multiple ? ( snippets.length + " snippets" ) : snippets[0].getExportFilename() ) +
             " as " +
+            ( combined ? "one combined " : "" ) +
             ( multiple ? "" : "a " ) +
             ( prv ? "private" : "public" ) +
-            " <a href='http://gist.github.com'>GitHub</a> gist" +
-            ( multiple ? "s" : "" ) +
+            " <a href='http://gist.github.com'>GitHub</a> " +
+            ( multiple && !combined ? "gists" : "gist" ) +
             ".";
         paraConfirmation.innerHTML = confirmation;
-        if (login) {
-          authentication.style.display = "block";
-          triangle.className = "down";
-          toggle.style.paddingLeft = "5px";
-        }
+        toggleCombined.className = multiple ? "visible check" : "hidden";
       }
 
       function isPrivate() { return checkPrivate.checked; }
+      function isCombined() { return checkCombined.checked; }
       function getApiToken() { return inputApiToken.value; }
       function getLogin() { return inputLogin.value; }
 
@@ -88,54 +117,61 @@
             token = newToken;
             login = newLogin;
             valid =
-                ( !login && !token ) ||
+                ( ! getUseAuthentication() ) ||
                 ( /^[a-f\d]{32}$/.test(token) && /^[0-9a-z\-]+$/i.test(login) );
-
             Scrippet.setDefaultButtonEnabled(valid);
         }
         setTimeout(validateLogin, 200);
       }
 
-      function toggleAuthentication() {
-        var authentication = document.getElementById("authentication");
-        var inputLogin = document.getElementById("login");
-        var inputApiToken = document.getElementById("api-token");
-        var toggle = document.getElementById("toggle");
-        var triangle = document.getElementById("triangle");
-        if (authentication.style.display == "block") {
-          authentication.style.display = "none";
+      function getUseAuthentication() {
+        return body.className == "auth";
+      }
+
+      function setUseAuthentication( use ) {
+        body.className = use ? "auth" : "non-auth";
+        if (!use) {
           inputLogin.value = "";
           inputApiToken.value = "";
-          triangle.className = "right";
-          toggle.style.paddingLeft = "15px";
-        } else {
-          authentication.style.display = "block";
-          triangle.className = "down";
-          toggle.style.paddingLeft = "5px";
         }
       }
 
+      function toggleAuthentication() {
+        setUseAuthentication( !getUseAuthentication() );
+      }
     </script>
   </head>
   <body>
     <div class="center-aligned slightly-padded">
       <p class="general-information" id="confirmation"></p>
-      <p id="toggle" onClick="toggleAuthentication();"><span id="triangle" class="right"></span> Authenticate</p>
+      <p id="toggle" onClick="toggleAuthentication();">
+        <span id="triangle" class="right"></span>
+        Authenticate
+      </p>
       <ul id="authentication">
         <li>
           <label for="login" class="col1">Login</label>
           <input id="login" onKeyPress="if (event.keyCode == 13) Scrippet.clickDefaultButton()" type="text"/>
         </li>
         <li>
-          <label for="api-token" class="col1"><a href="https://github.com/account#admin_bucket">API Token</a></label>
+          <label for="api-token" class="col1"><a href="http://github.com/account#admin_bucket">API Token</a></label>
           <input id="api-token" onKeyPress="if (event.keyCode == 13) Scrippet.clickDefaultButton()" maxlength="32" type="text"/>
         </li>
-        <li>
-          <span class="col1"></span>
-          <input id="is-private" type="checkbox" onClick="update();" />
-          <label for="is-private">Private gist</label>
-        </li>
       </ul>
+      <p class="check">
+        <label for="is-private">
+            <input id="is-private" type="checkbox" onClick="update();" />
+            <img src="lock.png" alt="Lock" />
+            Private gist
+        </label>
+      </p>
+      <p class="check" id="toggle-combined">
+        <label for="is-combined">
+            <input id="is-combined" type="checkbox" onClick="update();" />
+            <img src="package.png" alt="Combined" />
+            Combined gist
+        </label>
+      </p>
     </div>
   </body>
 </html>
